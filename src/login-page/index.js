@@ -1,9 +1,11 @@
 import React, {Component} from 'react';
 import styled from 'styled-components';
-import Service from '../service';
 import lockImg from './lock.png';
+import {ImgWrapper} from "../UI/image";
 import {Link} from 'react-router-dom';
-import history from "../history";
+import {connect} from "react-redux";
+import {ButtonWrapper} from "../UI/button";
+import {checkToken, userAuthorized} from "../redux/actions";
 
 const TextWrapper = styled.span`
   text-align: center;
@@ -12,14 +14,13 @@ const TextWrapper = styled.span`
   opacity: .5;
 `;
 
-const ImgWrapper = styled.div`
-  background-image: url(${lockImg});
-  width: 100px;
-  height: 100px;
-  background-size: contain;
-`;
 
 export const FormWrapper = styled.form`
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background-color: #fff;
     display: flex;
     flex-direction: column;
@@ -28,28 +29,6 @@ export const FormWrapper = styled.form`
     filter: blur(${props =>props.blur ? '50px' : 'none' });
 `;
 
-export const ButtonWrapper = styled.button`
-  width: 10vw;
-    margin-top: 20px;
-   font-weight: 700;
-    color: white;
-    text-decoration: none;
-    padding: .8em 1em calc(.8em + 3px);
-    border-radius: 3px;
-    background: black;
-    transition: 0.2s;
-&:hover { 
-  background: black;
-  transform: scale(1.3); 
-}
-&:active {
-  box-shadow: 0 3px black inset;
-}
-&:focus {
-  box-shadow: 0 3px black inset;
-  outline: none;
-}
-`;
 
 export const InputWrapper = styled.input`
     border: none;
@@ -83,6 +62,11 @@ class LoginPage extends Component {
         errorMessage: ''
     };
 
+
+    componentDidMount() {
+        this.props.checkToken();
+    }
+
     async handleSubmit() {
         const login = this.state.loginValue;
         const password = this.state.passwordValue;
@@ -92,9 +76,8 @@ class LoginPage extends Component {
             this.setState({ passwordFieldEmpty: true});
         } else {
             try {
-                await Service.authorize(login, password);
+                this.props.userAuthorized({login, password });
                 this.setState({ gotError: false, errorMessage: ''})
-                history.push('/landing')
             } catch (error) {
                 this.setState({gotError: true, errorMessage: 'Wrong password/login'})
             }
@@ -108,7 +91,11 @@ class LoginPage extends Component {
                     event.preventDefault();
                     await this.handleSubmit()
                 }}>
-                    <ImgWrapper/>
+                    <ImgWrapper
+                        src={lockImg}
+                        height={150}
+                        width={150}
+                    />
                     <InputWrapper
                         defaultValue= {this.state.loginValue}
                         onChange={(event) => {
@@ -138,10 +125,24 @@ class LoginPage extends Component {
                         If you don't have account yet you can <br/>
                         <Link to='/registration' style={{ textDecoration: 'none'}}> Create account </Link>
                     </TextWrapper>
-                {this.state.gotError ? <ErrorMessage> {this.state.errorMessage} </ErrorMessage> : ''}
+                <ErrorMessage>
+                    {this.props.errorMessage}
+                </ErrorMessage>
             </FormWrapper>
         )
     }
 }
 
-export default LoginPage;
+const mapStateToProps = ({ appCondition: {errorMessage, authorized}}) => {
+    return ({
+        errorMessage,
+        authorized
+    })
+};
+
+const mapDispatchToProps = {
+    userAuthorized,
+    checkToken
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(LoginPage);

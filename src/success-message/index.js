@@ -1,40 +1,53 @@
-import React from 'react'
+import React, {Component} from 'react'
 import styled from "styled-components";
 import successImage from './success.png';
-import {ButtonWrapper} from '../login-page';
-import history from "../history";
+import {ButtonWrapper} from '../UI/button';
+import { connect } from 'react-redux';
+import {redirectToRootComponent} from '../redux/actions'
+import { ImgWrapper} from "../UI/image";
 
-const SuccessMessageWrapper = styled.div`
+const SuccessMessageWrapper = styled.form`
   z-index: 100;
-  width: 40vw;
-  height: 70vh;
   position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
 `;
 
-const ImgWrapper = styled.div`
-  background-image: url(${successImage});
-  background-size: contain;
-  width: 20%;
-  height: 20%;
-  background-repeat: no-repeat;
+const SuccessMessageSpanWrapper = styled.span`
+  margin: 4%;
 `;
+class SuccessMessage extends Component {
 
-const SuccessMessage = () => {
-    return (
-        <SuccessMessageWrapper>
-            <ImgWrapper/>
-            You was successfully registered
-            <ButtonWrapper onClick={() => {
-                history.push('/')
+    render() {
+        return (
+            <SuccessMessageWrapper
+                onSubmit={()=> {
+                this.props.redirectToRootComponent()
             }}>
-                Log in
-            </ButtonWrapper>
-        </SuccessMessageWrapper>
-    )
+                <ImgWrapper
+                    src={successImage}
+                    width={100}
+                    height={100}
+                />
+                <SuccessMessageSpanWrapper>
+                    You was successfully registered
+                </SuccessMessageSpanWrapper>
+                <ButtonWrapper>
+                    Log in
+                </ButtonWrapper>
+            </SuccessMessageWrapper>
+        )
+    }
+}
+
+const mapDispatchToProps = {
+    redirectToRootComponent
 };
 
-export default SuccessMessage
+export default connect(null, mapDispatchToProps)(SuccessMessage)

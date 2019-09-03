@@ -1,10 +1,14 @@
 import React, {Component} from 'react';
-import Service from '../service';
-import {FormWrapper, InputWrapper, ButtonWrapper, ErrorMessage} from "../login-page";
+import {FormWrapper, InputWrapper, ErrorMessage} from "../login-page";
+import { ButtonWrapper } from '../UI/button'
 import InputMask from 'react-input-mask';
+import  {ImgWrapper} from '../UI/image'
 import SuccessMessage from "../success-message";
+import user from './user.png';
+import {connect} from 'react-redux';
+import {userRegistration} from '../redux/actions'
 
-export default class RegistrationPage extends Component {
+class RegistrationPage extends Component {
 
     state = {
         loginValue: '',
@@ -14,7 +18,6 @@ export default class RegistrationPage extends Component {
         mobilePhone: '+7',
         errorMessage: '',
         gotError: '',
-        showSuccessMessage: false
     };
     checkLoginField = () => {
         if (this.state.loginValue.length === 0) {
@@ -37,7 +40,8 @@ export default class RegistrationPage extends Component {
         }
     };
     checkMobilePhoneField = () => {
-        if (this.state.mobilePhone.length === 0) {
+        const mobilePhoneLength = this.state.mobilePhone.split(' ').join('').length;
+        if (mobilePhoneLength < 12) {
             this.setState({errorMessage: 'Enter mobile phone'})
         }
     };
@@ -61,14 +65,8 @@ export default class RegistrationPage extends Component {
     handleSubmit = async () => {
         await this.checkFields();
         if (this.state.errorMessage.length === 0) {
-            try {
-                const {loginValue, passwordValue, mobilePhone, emailValue} = this.state;
-                await Service.registration(loginValue, passwordValue, emailValue, mobilePhone)
-                this.setState({showSuccessMessage: true})
-                // history.push('/')
-            } catch (err) {
-                this.setState({errorMessage: 'Username is reserved'})
-            }
+            const {loginValue, passwordValue, mobilePhone, emailValue} = this.state;
+            this.props.userRegistration({loginValue, passwordValue, emailValue, mobilePhone});
         }
     };
 
@@ -76,13 +74,18 @@ export default class RegistrationPage extends Component {
     render() {
         return (
             <React.Fragment>
-                {this.state.showSuccessMessage ? <SuccessMessage/> : ''}
+                {this.props.showSuccessMessage ? <SuccessMessage/> : ''}
                 <FormWrapper
-                    blur={this.state.showSuccessMessage}
+                    blur={this.props.showSuccessMessage}
                     onSubmit={async (event) => {
                         event.preventDefault();
                         await this.handleSubmit()
                     }}>
+                    <ImgWrapper
+                        src={user}
+                        width={100}
+                        height={75}
+                    />
                     <InputWrapper
                         value={this.state.loginValue}
                         onChange={(event) => {
@@ -127,10 +130,21 @@ export default class RegistrationPage extends Component {
                         Register
                     </ButtonWrapper>
                     <ErrorMessage>
-                        {this.state.errorMessage}
+                        {this.state.errorMessage || this.props.errorMessage}
                     </ErrorMessage>
                 </FormWrapper>
             </React.Fragment>
         )
     }
 }
+
+const mapStateToProps = ({appCondition: {showSuccessMessage, errorMessage}}) => {
+    return ({
+        showSuccessMessage,
+        errorMessage
+    })
+};
+
+const mapDispatchToProps = {userRegistration};
+
+export default connect(mapStateToProps, mapDispatchToProps)(RegistrationPage)
